@@ -4,8 +4,10 @@ import TOMLKit
 struct Gaps: ConvenienceCopyable, Equatable, Sendable {
     var inner: Inner
     var outer: Outer
+    var singleWindowMargin: Outer?
+    var centerExpandMargin: Outer?
 
-    static let zero = Gaps(inner: .zero, outer: .zero)
+    static let zero = Gaps(inner: .zero, outer: .zero, singleWindowMargin: nil, centerExpandMargin: nil)
 
     struct Inner: ConvenienceCopyable, Equatable, Sendable {
         var vertical: DynamicConfigValue<Int>
@@ -51,6 +53,8 @@ struct Gaps: ConvenienceCopyable, Equatable, Sendable {
 struct ResolvedGaps {
     let inner: Inner
     let outer: Outer
+    let singleWindowMargin: Outer?
+    let centerExpandMargin: Outer?
 
     struct Inner {
         let vertical: Int
@@ -80,12 +84,32 @@ struct ResolvedGaps {
             top: gaps.outer.top.getValue(for: monitor),
             right: gaps.outer.right.getValue(for: monitor),
         )
+        
+        singleWindowMargin = gaps.singleWindowMargin.map { margin in
+            .init(
+                left: margin.left.getValue(for: monitor),
+                bottom: margin.bottom.getValue(for: monitor),
+                top: margin.top.getValue(for: monitor),
+                right: margin.right.getValue(for: monitor)
+            )
+        }
+        
+        centerExpandMargin = gaps.centerExpandMargin.map { margin in
+            .init(
+                left: margin.left.getValue(for: monitor),
+                bottom: margin.bottom.getValue(for: monitor),
+                top: margin.top.getValue(for: monitor),
+                right: margin.right.getValue(for: monitor)
+            )
+        }
     }
 }
 
 private let gapsParser: [String: any ParserProtocol<Gaps>] = [
     "inner": Parser(\.inner, parseInner),
     "outer": Parser(\.outer, parseOuter),
+    "single-window-margin": Parser(\.singleWindowMargin, parseOuter),
+    "center-expand-margin": Parser(\.centerExpandMargin, parseOuter),
 ]
 
 private let innerParser: [String: any ParserProtocol<Gaps.Inner>] = [
