@@ -1,0 +1,155 @@
+name: Rebase Ultra-Wide Features
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for rebase
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Configure git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+    
+    - name: Add upstream remote
+      run: |
+        # Add the official AeroSpace repository as upstream
+        git remote add upstream https://github.com/nikitabobko/AeroSpace.git || true
+        git fetch upstream
+    
+    - name: Attempt rebase
+      id: rebase
+      continue-on-error: true
+      run: |
+        # Checkout the ultra-wide-features branch
+        git checkout ultra-wide-features
+        
+        # Save the current commit hash
+        ORIGINAL_HEAD=$(git rev-parse HEAD)
+        echo "original_head=$ORIGINAL_HEAD" >> $GITHUB_OUTPUT
+        
+        # Attempt to rebase onto upstream/main
+        if git rebase upstream/main; then
+          echo "rebase_success=true" >> $GITHUB_OUTPUT
+          echo "Rebase completed successfully"
+        else
+          echo "rebase_success=false" >> $GITHUB_OUTPUT
+          echo "Rebase failed with conflicts"
+          
+          # Abort the failed rebase
+          git rebase --abort
+          
+          # Create a conflict report
+          echo "## Rebase Conflict Report" > conflict_report.md
+          echo "" >> conflict_report.md
+          echo "Failed to rebase \`ultra-wide-features\` onto \`upstream/main\`" >> conflict_report.md
+          echo "" >> conflict_report.md
+          echo "### Commits in ultra-wide-features not in upstream/main:" >> conflict_report.md
+          git log --oneline upstream/main..ultra-wide-features >> conflict_report.md
+          echo "" >> conflict_report.md
+          echo "### Recent upstream commits:" >> conflict_report.md
+          git log --oneline -10 upstream/main >> conflict_report.md
+          
+          # Save conflict report
+          echo "conflict_report<<EOF" >> $GITHUB_OUTPUT
+          cat conflict_report.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Push rebased branch
+      if: steps.rebase.outputs.rebase_success == 'true'
+      run: |
+        # Force push the rebased branch
+        git push --force-with-lease origin ultra-wide-features
+    
+    - name: Create or update PR for conflicts
+      if: steps.rebase.outputs.rebase_success == 'false'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const title = '[Auto] Rebase conflicts in ultra-wide-features';
+          const body = `## Automated Rebase Failed
+          
+          The automated rebase of \`ultra-wide-features\` onto \`upstream/main\` failed due to conflicts.
+          
+          ${{ steps.rebase.outputs.conflict_report }}
+          
+          ### Action Required
+          
+          Please manually resolve the conflicts:
+          
+          \`\`\`bash
+          # Fetch latest changes
+          git fetch upstream
+          git checkout ultra-wide-features
+          
+          # Start the rebase
+          git rebase upstream/main
+          
+          # Resolve conflicts and continue
+          # After resolving each conflict:
+          git add .
+          git rebase --continue
+          
+          # Force push when done
+          git push --force-with-lease origin ultra-wide-features
+          \`\`\`
+          
+          ---
+          *This PR was automatically created by the rebase workflow.*`;
+          
+          // Check if a PR already exists
+          const { data: prs } = await github.rest.pulls.list({
+            owner,
+            repo,
+            head: `${owner}:ultra-wide-features`,
+            state: 'open'
+          });
+          
+          const existingPr = prs.find(pr => pr.title.includes('[Auto] Rebase conflicts'));
+          
+          if (existingPr) {
+            // Update existing PR
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: existingPr.number,
+              body: body
+            });
+            
+            // Add a comment
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: existingPr.number,
+              body: `🔄 Rebase attempt failed again at ${new Date().toISOString()}`
+            });
+          } else {
+            // Create new PR
+            await github.rest.pulls.create({
+              owner,
+              repo,
+              title,
+              head: 'ultra-wide-features',
+              base: 'main',
+              body,
+              draft: true
+            });
+          }
