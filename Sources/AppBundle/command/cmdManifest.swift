@@ -6,6 +6,8 @@ extension CmdArgs {
         switch Self.info.kind {
             case .balanceSizes:
                 command = BalanceSizesCommand(args: self as! BalanceSizesCmdArgs)
+            case .centerExpand:
+                command = CenterExpandCommand(args: self as! CenterExpandCmdArgs)
             case .close:
                 command = CloseCommand(args: self as! CloseCmdArgs)
             case .closeAllWindowsButCurrent:
