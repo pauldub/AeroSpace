@@ -1,0 +1,45 @@
+# Example configuration for ultra-wide monitor features
+
+# Standard gaps configuration
+[gaps]
+inner.horizontal = 10
+inner.vertical = 10
+outer.left = 10
+outer.right = 10
+outer.top = 10
+outer.bottom = 10
+
+# Single window margins - adds extra margins when only one window is tiled
+# These are applied IN ADDITION to the outer gaps
+[gaps.single-window-margin]
+left = 400   # Add 400px to left side for ultra-wide monitors
+right = 400  # Add 400px to right side
+top = 0      # No extra top margin
+bottom = 0   # No extra bottom margin
+
+# Center-expand margins - used when center-expand command is triggered
+# These replace the outer gaps when a window is center-expanded
+[gaps.center-expand-margin]
+left = 300   # 300px margin on left
+right = 300  # 300px margin on right
+top = 50     # 50px margin on top
+bottom = 50  # 50px margin on bottom
+
+# Example key bindings
+[mode.main.binding]
+# Toggle center-expand for current window
+alt-f = 'center-expand'
+
+# Explicit on/off
+alt-shift-f = 'center-expand on'
+alt-ctrl-f = 'center-expand off'
+
+# Per-monitor configuration example
+# You can also use dynamic values for different monitors
+[gaps.single-window-margin]
+left = [{ monitor."LG UltraWide" = 500 }, 200]  # 500px on LG UltraWide, 200px on others
+right = [{ monitor."LG UltraWide" = 500 }, 200]
+
+[gaps.center-expand-margin]
+left = [{ monitor."LG UltraWide" = 400 }, 100]
+right = [{ monitor."LG UltraWide" = 400 }, 100]
