@@ -32,9 +32,13 @@ extension TreeNode {
                     if window.isFullscreen && window == context.workspace.rootTilingContainer.mostRecentWindowRecursive {
                         lastAppliedLayoutPhysicalRect = nil
                         window.layoutFullscreen(context)
+                    } else if window.isCenterExpanded && window == context.workspace.rootTilingContainer.mostRecentWindowRecursive {
+                        lastAppliedLayoutPhysicalRect = nil
+                        window.layoutCenterExpand(context)
                     } else {
                         lastAppliedLayoutPhysicalRect = physicalRect
                         window.isFullscreen = false
+                        window.isCenterExpanded = false
                         window.setAxFrame(point, CGSize(width: width, height: height))
                     }
                 }
@@ -93,6 +97,21 @@ extension Window {
             : context.workspace.workspaceMonitor.visibleRectPaddedByOuterGaps
         setAxFrame(monitorRect.topLeftCorner, CGSize(width: monitorRect.width, height: monitorRect.height))
     }
+    
+    @MainActor // todo can be dropped in future Swift versions?
+    func layoutCenterExpand(_ context: LayoutContext) {
+        let monitorRect = context.workspace.workspaceMonitor.visibleRect
+        let margins = context.resolvedGaps.centerExpandMargin ?? context.resolvedGaps.outer
+        
+        let expandedRect = Rect(
+            topLeftX: monitorRect.topLeftX + CGFloat(margins.left),
+            topLeftY: monitorRect.topLeftY + CGFloat(margins.top),
+            width: monitorRect.width - CGFloat(margins.left + margins.right),
+            height: monitorRect.height - CGFloat(margins.top + margins.bottom)
+        )
+        
+        setAxFrame(expandedRect.topLeftCorner, CGSize(width: expandedRect.width, height: expandedRect.height))
+    }
 }
 
 extension TilingContainer {
@@ -100,6 +119,21 @@ extension TilingContainer {
     fileprivate func layoutTiles(_ point: CGPoint, width: CGFloat, height: CGFloat, virtual: Rect, _ context: LayoutContext) async throws {
         var point = point
         var virtualPoint = virtual.topLeftCorner
+        var width = width
+        var height = height
+        
+        // Apply single window margins if applicable
+        if children.count == 1, let singleWindowMargin = context.resolvedGaps.singleWindowMargin {
+            // Check if this is the root tiling container (parent is workspace)
+            if let parent = parent, case .workspace = parent.cases {
+                point = CGPoint(
+                    x: point.x + CGFloat(singleWindowMargin.left),
+                    y: point.y + CGFloat(singleWindowMargin.top)
+                )
+                width = width - CGFloat(singleWindowMargin.left + singleWindowMargin.right)
+                height = height - CGFloat(singleWindowMargin.top + singleWindowMargin.bottom)
+            }
+        }
 
         guard let delta = ((orientation == .h ? width : height) - CGFloat(children.sumOfDouble { $0.getWeight(orientation) }))
             .div(children.count) else { return }
