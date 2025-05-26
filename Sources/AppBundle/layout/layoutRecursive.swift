@@ -97,19 +97,19 @@ extension Window {
             : context.workspace.workspaceMonitor.visibleRectPaddedByOuterGaps
         setAxFrame(monitorRect.topLeftCorner, CGSize(width: monitorRect.width, height: monitorRect.height))
     }
-    
+
     @MainActor // todo can be dropped in future Swift versions?
     func layoutCenterExpand(_ context: LayoutContext) {
         let monitorRect = context.workspace.workspaceMonitor.visibleRect
         let margins = context.resolvedGaps.centerExpandMargin ?? context.resolvedGaps.outer
-        
+
         let expandedRect = Rect(
             topLeftX: monitorRect.topLeftX + CGFloat(margins.left),
             topLeftY: monitorRect.topLeftY + CGFloat(margins.top),
             width: monitorRect.width - CGFloat(margins.left + margins.right),
             height: monitorRect.height - CGFloat(margins.top + margins.bottom)
         )
-        
+
         setAxFrame(expandedRect.topLeftCorner, CGSize(width: expandedRect.width, height: expandedRect.height))
     }
 }
@@ -121,11 +121,11 @@ extension TilingContainer {
         var virtualPoint = virtual.topLeftCorner
         var width = width
         var height = height
-        
+
         // Apply single window margins if applicable
         if children.count == 1, let singleWindowMargin = context.resolvedGaps.singleWindowMargin {
             // Check if this is the root tiling container (parent is workspace)
-            if let parent = parent, case .workspace = parent.cases {
+            if let parent, case .workspace = parent.cases {
                 point = CGPoint(
                     x: point.x + CGFloat(singleWindowMargin.left),
                     y: point.y + CGFloat(singleWindowMargin.top)

@@ -84,7 +84,7 @@ struct ResolvedGaps {
             top: gaps.outer.top.getValue(for: monitor),
             right: gaps.outer.right.getValue(for: monitor),
         )
-        
+
         singleWindowMargin = gaps.singleWindowMargin.map { margin in
             .init(
                 left: margin.left.getValue(for: monitor),
@@ -93,7 +93,7 @@ struct ResolvedGaps {
                 right: margin.right.getValue(for: monitor)
             )
         }
-        
+
         centerExpandMargin = gaps.centerExpandMargin.map { margin in
             .init(
                 left: margin.left.getValue(for: monitor),

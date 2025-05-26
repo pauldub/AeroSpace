@@ -1,17 +1,17 @@
 public let center_expand_help_generated = """
-USAGE: center-expand [-h|--help] [<on|off|toggle>] [--fail-if-noop]
+    USAGE: center-expand [-h|--help] [<on|off|toggle>] [--fail-if-noop]
 
-OPTIONS:
-  -h, --help               Print help
-  --fail-if-noop           Exit with non-zero code if already in the desired state
+    OPTIONS:
+      -h, --help               Print help
+      --fail-if-noop           Exit with non-zero code if already in the desired state
 
-ARGUMENTS:
-  <on|off|toggle>          'on' to enable, 'off' to disable, 'toggle' to toggle (default: toggle)
+    ARGUMENTS:
+      <on|off|toggle>          'on' to enable, 'off' to disable, 'toggle' to toggle (default: toggle)
 
-DESCRIPTION:
-  Expand the focused window to fill the workspace with configurable margins.
-  Similar to fullscreen but respects the configured center-expand-margin gaps.
-"""
+    DESCRIPTION:
+      Expand the focused window to fill the workspace with configurable margins.
+      Similar to fullscreen but respects the configured center-expand-margin gaps.
+    """
 
 public struct CenterExpandCmdArgs: CmdArgs {
     public let rawArgs: EquatableNoop<[String]>

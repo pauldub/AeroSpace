@@ -19,17 +19,17 @@ struct CenterExpandCommand: Command {
                 "Tip: use --fail-if-noop to exit with non-zero code")
             return !args.failIfNoop
         }
-        
+
         // Store the current layout rect before expanding
         if newState && !window.isCenterExpanded {
             window.lastTiledLayoutRect = window.lastAppliedLayoutPhysicalRect
         }
-        
+
         window.isCenterExpanded = newState
-        
+
         // If we're turning off center-expand and have a stored rect, we'll use it in layout
         // Otherwise, let the normal layout system handle it
-        
+
         // Focus on its own workspace
         window.markAsMostRecentChild()
         return true
