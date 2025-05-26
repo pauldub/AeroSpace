@@ -2,8 +2,8 @@ name: Rebase Ultra-Wide Features
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    # Run every 3 days at 2 AM UTC
+    - cron: '0 2 */3 * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:

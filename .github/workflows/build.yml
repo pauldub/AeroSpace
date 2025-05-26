@@ -8,10 +8,16 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '0 0 * * *' # every day at 00:00
+    - cron: '0 3 */3 * *' # every 3 days at 03:00 (1 hour after rebase)
+  workflow_run:
+    workflows: ["Rebase Ultra-Wide Features"]
+    types:
+      - completed
 
 jobs:
   build:
+    # Only run if not triggered by workflow_run, or if the triggering workflow succeeded
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     strategy:
       # fail-fast: false # Disable fail-fast in matrix
       matrix:
