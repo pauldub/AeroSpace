@@ -7,8 +7,8 @@ on:
       - 'rr/**' # "rr" stands for "remote run"
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '0 3 */3 * *' # every 3 days at 03:00 (1 hour after rebase)
+  # schedule:
+  #  - cron: '0 3 */3 * *' # every 3 days at 03:00 (1 hour after rebase)
   workflow_run:
     workflows: ["Rebase Ultra-Wide Features"]
     types:
